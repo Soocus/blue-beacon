@@ -226,7 +226,6 @@
         const messageDiv = document.getElementById('formMessage');
         const desktopInput = form.querySelector('input[name="email_address"]');
         const mobileInput = document.getElementById('mobile-email');
-        const iframe = document.getElementById('convertkit-frame');
         
         // Sync mobile input to desktop input (form only submits email_address)
         mobileInput.addEventListener('input', function() {
@@ -265,9 +264,9 @@
             button.disabled = true;
             button.classList.add('opacity-50', 'cursor-not-allowed');
             
-            // Listen for iframe load (indicates form was submitted)
-            iframe.onload = function() {
-                // Success - form was submitted
+            // Form submits to iframe - show success after brief delay
+            // (We can't read cross-origin iframe response, so we assume success)
+            setTimeout(() => {
                 messageDiv.classList.remove('hidden', 'text-red-400');
                 messageDiv.classList.add('text-green-400');
                 messageDiv.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Success! Thank you for subscribing to the Blue Beacon newsletter.';
@@ -286,7 +285,7 @@
                         messageDiv.classList.add('hidden');
                     }, 5000);
                 }, 3000);
-            };
+            }, 1500);
         });
     </script>
 </body>
