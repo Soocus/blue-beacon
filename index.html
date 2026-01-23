@@ -210,6 +210,7 @@
         const messageDiv = document.getElementById('formMessage');
         const desktopInput = document.getElementById('email-desktop');
         const mobileInput = document.getElementById('email-mobile');
+        const allButtons = form.querySelectorAll('.subscribe-btn');
         
         // Sync inputs
         mobileInput.addEventListener('input', () => desktopInput.value = mobileInput.value);
@@ -217,9 +218,11 @@
         
         form.addEventListener('submit', async function(event) {
             event.preventDefault();
+            console.log('Form submitted');
             
-            const isMobile = window.innerWidth < 640;
-            const email = (isMobile ? mobileInput.value : desktopInput.value).trim();
+            // Get email from whichever input has a value
+            const email = (desktopInput.value || mobileInput.value).trim();
+            console.log('Email:', email);
             
             // Validate
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -230,18 +233,17 @@
                 return;
             }
             
-            // Get the visible button
-            const button = isMobile
-                ? form.querySelector('.sm\\:hidden .subscribe-btn')
-                : form.querySelector('.hidden.sm\\:flex .subscribe-btn');
-            
-            // Show loading state
-            const originalBtnText = button.innerText;
-            button.innerText = "PROCESSING...";
-            button.disabled = true;
-            button.classList.add('opacity-50', 'cursor-not-allowed');
+            // Show loading state on ALL buttons
+            const originalTexts = [];
+            allButtons.forEach((btn, i) => {
+                originalTexts[i] = btn.innerText;
+                btn.innerText = "PROCESSING...";
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            });
             
             try {
+                console.log('Calling API...');
                 const response = await fetch('/api/subscribe', {
                     method: 'POST',
                     headers: {
@@ -251,6 +253,7 @@
                 });
                 
                 const data = await response.json();
+                console.log('API response:', data);
                 
                 if (response.ok) {
                     // Success
@@ -261,13 +264,15 @@
                     // Clear inputs
                     desktopInput.value = '';
                     mobileInput.value = '';
-                    button.innerText = "SUBSCRIBED";
+                    allButtons.forEach(btn => btn.innerText = "SUBSCRIBED");
                     
                     // Reset after delay
                     setTimeout(() => {
-                        button.innerText = originalBtnText;
-                        button.disabled = false;
-                        button.classList.remove('opacity-50', 'cursor-not-allowed');
+                        allButtons.forEach((btn, i) => {
+                            btn.innerText = originalTexts[i];
+                            btn.disabled = false;
+                            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        });
                         setTimeout(() => {
                             messageDiv.classList.add('hidden');
                         }, 5000);
@@ -276,14 +281,17 @@
                     throw new Error(data.error || 'Subscription failed');
                 }
             } catch (error) {
+                console.error('Error:', error);
                 // Error state
                 messageDiv.classList.remove('hidden', 'text-green-400');
                 messageDiv.classList.add('text-red-400');
                 messageDiv.innerHTML = '<i class="fa-solid fa-exclamation-circle mr-2"></i> ' + (error.message || 'Something went wrong. Please try again.');
                 
-                button.innerText = originalBtnText;
-                button.disabled = false;
-                button.classList.remove('opacity-50', 'cursor-not-allowed');
+                allButtons.forEach((btn, i) => {
+                    btn.innerText = originalTexts[i];
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
             }
         });
     </script>
