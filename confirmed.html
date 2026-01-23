@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You're In! | The Blue Beacon Show</title>
+    <meta name="description" content="Welcome to The Blue Beacon newsletter. You're officially subscribed.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://i.imgur.com/TyYY4II.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600&family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Montserrat', 'sans-serif'],
+                        headline: ['Anton', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            gold: '#C5A059', 
+                            dark: '#0a0a0a',
+                        }
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+                        'fade-in': 'fadeIn 1s ease-out forwards',
+                        'bounce-in': 'bounceIn 0.6s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        bounceIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.8)' },
+                            '50%': { transform: 'scale(1.05)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Mobile viewport fix */
+        @supports (height: 100dvh) {
+            .min-h-screen-safe {
+                min-height: 100dvh;
+            }
+        }
+        @supports not (height: 100dvh) {
+            .min-h-screen-safe {
+                min-height: 100vh;
+            }
+        }
+    </style>
+</head>
+<body class="bg-black text-white antialiased min-h-screen-safe flex flex-col relative font-sans overflow-x-hidden">
+
+    <!-- Background Image with Overlay -->
+    <div class="fixed inset-0 z-0">
+        <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" 
+             style="background-image: url('https://i.imgur.com/l6hjS6P.png');">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/85 to-black/70"></div>
+    </div>
+
+    <!-- Navigation / Header -->
+    <nav class="relative z-10 w-full px-4 py-4 sm:px-6 sm:py-6 md:px-10 md:py-8 flex justify-between items-center opacity-0 animate-fade-in" style="animation-delay: 0.1s;">
+        <a href="/" class="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity">
+            <img src="https://i.imgur.com/TyYY4II.png" alt="Chris Lombardi Logo" class="h-8 w-8 sm:h-10 sm:w-10 object-cover rounded-full border border-white/20">
+            <span class="font-display font-bold text-base sm:text-lg md:text-xl tracking-wider text-white uppercase">Chris Lombardi</span>
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="relative z-10 flex-grow flex flex-col justify-center items-center px-4 sm:px-6 md:px-8 py-8 w-full max-w-3xl mx-auto text-center">
+        
+        <!-- Checkmark Icon -->
+        <div class="opacity-0 animate-bounce-in" style="animation-delay: 0.2s;">
+            <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-green-400 flex items-center justify-center mb-8">
+                <i class="fa-solid fa-check text-green-400 text-3xl sm:text-4xl"></i>
+            </div>
+        </div>
+
+        <!-- Thank You Message -->
+        <div class="space-y-4 sm:space-y-6 opacity-0 animate-fade-in-up" style="animation-delay: 0.4s;">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-headline font-normal leading-tight text-white uppercase tracking-wide">
+                You're In!
+            </h1>
+
+            <p class="max-w-lg mx-auto text-base sm:text-lg md:text-xl text-gray-300 font-light leading-relaxed">
+                Thanks for confirming. You're now officially part of The Blue Beacon newsletter.
+            </p>
+            
+            <p class="max-w-md mx-auto text-sm sm:text-base text-gray-400 font-light">
+                Keep an eye on your inbox for exclusive insights and stories that don't make the headlines.
+            </p>
+        </div>
+
+        <!-- YouTube CTA -->
+        <div class="mt-10 sm:mt-12 opacity-0 animate-fade-in-up" style="animation-delay: 0.6s;">
+            <p class="text-gray-400 text-sm mb-4 uppercase tracking-widest font-display">While you wait</p>
+            
+            <a 
+                href="https://www.youtube.com/@C.Lombardi" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-3 px-6 sm:px-8 py-3 sm:py-4 border border-white/30 hover:border-white hover:bg-white/5 transition-all duration-300 group"
+            >
+                <i class="fa-brands fa-youtube text-red-500 text-xl sm:text-2xl group-hover:scale-110 transition-transform"></i>
+                <span class="font-display font-bold text-sm sm:text-base tracking-wider uppercase text-white">
+                    Watch on YouTube
+                </span>
+                <i class="fa-solid fa-arrow-right text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all"></i>
+            </a>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="mt-8 opacity-0 animate-fade-in" style="animation-delay: 0.8s;">
+            <a href="/" class="text-gray-500 hover:text-white text-sm transition-colors">
+                <i class="fa-solid fa-arrow-left mr-2"></i>
+                Back to home
+            </a>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative z-10 w-full px-4 py-6 sm:px-6 md:px-10 opacity-0 animate-fade-in" style="animation-delay: 1s;">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500 font-sans tracking-wide">
+            <p>&copy; 2026 Blue Beacon. All rights reserved.</p>
+            
+            <div class="flex gap-6">
+                <a href="https://www.youtube.com/@C.Lombardi" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white transition-colors" aria-label="YouTube">
+                    <i class="fa-brands fa-youtube text-lg"></i>
+                </a>
+                <a href="https://x.com/ChrisLombardi" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white transition-colors" aria-label="X (Twitter)">
+                    <i class="fa-brands fa-x-twitter text-lg"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
