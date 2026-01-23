@@ -94,9 +94,6 @@
 </head>
 <body class="bg-black text-white antialiased min-h-screen-safe flex flex-col relative font-sans overflow-x-hidden">
 
-    <!-- Hidden iframe for form submission -->
-    <iframe name="convertkit-frame" id="convertkit-frame" style="display:none;"></iframe>
-
     <!-- Background Image with Overlay -->
     <div class="fixed inset-0 z-0">
         <!-- Background -->
@@ -142,28 +139,18 @@
             </p>
         </div>
 
-        <!-- Subscription Form - ConvertKit Integration -->
+        <!-- Subscription Form -->
         <div class="mt-8 sm:mt-10 w-full max-w-md px-2 opacity-0 animate-fade-in-up" style="animation-delay: 0.6s;">
-            <form 
-                id="subscribeForm" 
-                class="relative group seva-form formkit-form"
-                action="https://app.kit.com/forms/9005443/subscriptions" 
-                method="post"
-                target="convertkit-frame"
-                data-sv-form="9005443"
-                data-uid="b0bee11729"
-                data-format="inline"
-                data-version="5"
-            >
+            <form id="subscribeForm" class="relative group">
                 <!-- Desktop: inline layout -->
                 <div class="hidden sm:flex items-center border-b-2 border-white/30 transition-all duration-300 focus-within:border-white focus-within:bg-white/5 py-3">
                     <i class="fa-regular fa-envelope text-gray-400 ml-2"></i>
                     <input 
                         type="email" 
-                        name="email_address"
+                        id="email-desktop"
                         required
                         placeholder="Enter your email address" 
-                        class="formkit-input input-autofill-fix w-full bg-transparent border-none text-white placeholder-gray-500 focus:ring-0 focus:outline-none px-4 py-1 font-sans font-medium text-sm sm:text-base"
+                        class="input-autofill-fix w-full bg-transparent border-none text-white placeholder-gray-500 focus:ring-0 focus:outline-none px-4 py-1 font-sans font-medium text-sm sm:text-base"
                     >
                     <button 
                         type="submit" 
@@ -173,13 +160,13 @@
                     </button>
                 </div>
                 
-                <!-- Mobile: stacked layout (hidden input syncs with desktop) -->
+                <!-- Mobile: stacked layout -->
                 <div class="sm:hidden space-y-4">
                     <div class="flex items-center border-b-2 border-white/30 transition-all duration-300 focus-within:border-white focus-within:bg-white/5 py-3">
                         <i class="fa-regular fa-envelope text-gray-400 ml-2"></i>
                         <input 
                             type="email" 
-                            id="mobile-email"
+                            id="email-mobile"
                             required
                             placeholder="Enter your email" 
                             class="input-autofill-fix w-full bg-transparent border-none text-white placeholder-gray-500 focus:ring-0 focus:outline-none px-3 py-1 font-sans font-medium text-base"
@@ -217,36 +204,26 @@
         </div>
     </footer>
 
-    <!-- ConvertKit Script -->
-    <script src="https://f.convertkit.com/ckjs/ck.5.js"></script>
-    
     <!-- Form Handler Script -->
     <script>
         const form = document.getElementById('subscribeForm');
         const messageDiv = document.getElementById('formMessage');
-        const desktopInput = form.querySelector('input[name="email_address"]');
-        const mobileInput = document.getElementById('mobile-email');
+        const desktopInput = document.getElementById('email-desktop');
+        const mobileInput = document.getElementById('email-mobile');
         
-        // Sync mobile input to desktop input (form only submits email_address)
-        mobileInput.addEventListener('input', function() {
-            desktopInput.value = this.value;
-        });
+        // Sync inputs
+        mobileInput.addEventListener('input', () => desktopInput.value = mobileInput.value);
+        desktopInput.addEventListener('input', () => mobileInput.value = desktopInput.value);
         
-        // Also sync desktop to mobile for consistency
-        desktopInput.addEventListener('input', function() {
-            mobileInput.value = this.value;
-        });
-        
-        form.addEventListener('submit', function(event) {
-            const isMobile = window.innerWidth < 640;
-            const emailValue = isMobile ? mobileInput.value.trim() : desktopInput.value.trim();
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
             
-            // Ensure the actual form field has the value
-            desktopInput.value = emailValue;
+            const isMobile = window.innerWidth < 640;
+            const email = (isMobile ? mobileInput.value : desktopInput.value).trim();
             
             // Validate
-            if (!emailValue || !desktopInput.validity.valid) {
-                event.preventDefault();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email || !emailRegex.test(email)) {
                 messageDiv.classList.remove('hidden', 'text-green-400');
                 messageDiv.classList.add('text-red-400');
                 messageDiv.innerHTML = '<i class="fa-solid fa-exclamation-circle mr-2"></i> Please enter a valid email address.';
@@ -264,28 +241,50 @@
             button.disabled = true;
             button.classList.add('opacity-50', 'cursor-not-allowed');
             
-            // Form submits to iframe - show success after brief delay
-            // (We can't read cross-origin iframe response, so we assume success)
-            setTimeout(() => {
-                messageDiv.classList.remove('hidden', 'text-red-400');
-                messageDiv.classList.add('text-green-400');
-                messageDiv.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Success! Thank you for subscribing to the Blue Beacon newsletter.';
+            try {
+                const response = await fetch('/api/subscribe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email }),
+                });
                 
-                // Clear inputs
-                desktopInput.value = '';
-                mobileInput.value = '';
-                button.innerText = "SUBSCRIBED";
+                const data = await response.json();
                 
-                // Reset after delay
-                setTimeout(() => {
-                    button.innerText = originalBtnText;
-                    button.disabled = false;
-                    button.classList.remove('opacity-50', 'cursor-not-allowed');
+                if (response.ok) {
+                    // Success
+                    messageDiv.classList.remove('hidden', 'text-red-400');
+                    messageDiv.classList.add('text-green-400');
+                    messageDiv.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Success! Thank you for subscribing to the Blue Beacon newsletter.';
+                    
+                    // Clear inputs
+                    desktopInput.value = '';
+                    mobileInput.value = '';
+                    button.innerText = "SUBSCRIBED";
+                    
+                    // Reset after delay
                     setTimeout(() => {
-                        messageDiv.classList.add('hidden');
-                    }, 5000);
-                }, 3000);
-            }, 1500);
+                        button.innerText = originalBtnText;
+                        button.disabled = false;
+                        button.classList.remove('opacity-50', 'cursor-not-allowed');
+                        setTimeout(() => {
+                            messageDiv.classList.add('hidden');
+                        }, 5000);
+                    }, 3000);
+                } else {
+                    throw new Error(data.error || 'Subscription failed');
+                }
+            } catch (error) {
+                // Error state
+                messageDiv.classList.remove('hidden', 'text-green-400');
+                messageDiv.classList.add('text-red-400');
+                messageDiv.innerHTML = '<i class="fa-solid fa-exclamation-circle mr-2"></i> ' + (error.message || 'Something went wrong. Please try again.');
+                
+                button.innerText = originalBtnText;
+                button.disabled = false;
+                button.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
         });
     </script>
 </body>
