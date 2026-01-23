@@ -55,12 +55,18 @@ export default async function handler(req, res) {
 
         const data = await response.json();
 
-        if (response.ok) {
-            return res.status(200).json({ success: true, message: 'Subscribed successfully' });
+        // Return the full ConvertKit response for debugging
+        if (response.ok && data.subscription) {
+            return res.status(200).json({ 
+                success: true, 
+                message: 'Subscribed successfully',
+                subscriber_id: data.subscription.subscriber.id,
+                subscriber_email: data.subscription.subscriber.email_address
+            });
         } else {
             return res.status(400).json({ 
-                error: data.message || 'Subscription failed',
-                details: data 
+                error: data.message || data.error || 'Subscription failed',
+                convertkit_response: data 
             });
         }
     } catch (error) {
