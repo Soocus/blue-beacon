@@ -7,6 +7,21 @@
     const desktopInput = document.getElementById('email-desktop');
     const mobileInput = document.getElementById('email-mobile');
     const allButtons = form.querySelectorAll('.subscribe-btn');
+
+    // Check if user already subscribed (prevents form reuse/spam)
+    if (localStorage.getItem('bluebeacon_subscribed') === 'true') {
+        // Hide form and show already subscribed message
+        form.style.display = 'none';
+        messageDiv.classList.remove('hidden');
+        messageDiv.classList.add('text-green-400');
+        messageDiv.textContent = '';
+        const icon = document.createElement('i');
+        icon.className = 'fa-solid fa-check mr-2';
+        messageDiv.appendChild(icon);
+        messageDiv.appendChild(document.createTextNode("You're already subscribed!"));
+        messageDiv.style.position = 'relative';
+        return; // Exit early, don't set up form handlers
+    }
     
     // CSRF token generation and management (double-submit cookie pattern)
     function generateCSRFToken() {
@@ -110,18 +125,17 @@
             const data = await response.json();
             
             if (response.ok) {
-                showMessage('success', 'Success! Thank you for subscribing to the Blue Beacon newsletter.');
+                // Mark as subscribed in localStorage to prevent form reuse
+                localStorage.setItem('bluebeacon_subscribed', 'true');
                 
-                // Clear inputs
-                desktopInput.value = '';
-                mobileInput.value = '';
+                showMessage('success', 'Success! Redirecting...');
                 setButtonsSuccess(allButtons);
                 
-                // Reset after delay
+                // Redirect to confirmation page
                 setTimeout(() => {
-                    resetButtons(allButtons, originalTexts);
-                    setTimeout(hideMessage, 5000);
-                }, 3000);
+                    window.location.href = '/confirmed.html';
+                }, 1000);
+                return;
             } else {
                 // Use a generic message instead of server response to prevent XSS
                 const safeMessage = data.error && typeof data.error === 'string' && data.error.length < 200
