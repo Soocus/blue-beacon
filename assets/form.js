@@ -4,22 +4,20 @@
 
     const form = document.getElementById('subscribeForm');
     const messageDiv = document.getElementById('formMessage');
+    const subscribedState = document.getElementById('subscribedState');
     const desktopInput = document.getElementById('email-desktop');
     const mobileInput = document.getElementById('email-mobile');
     const allButtons = form.querySelectorAll('.subscribe-btn');
 
+    // Function to show subscribed state
+    function showSubscribedState() {
+        form.classList.add('hidden');
+        subscribedState.classList.remove('hidden');
+    }
+
     // Check if user already subscribed (prevents form reuse/spam)
     if (localStorage.getItem('bluebeacon_subscribed') === 'true') {
-        // Hide form and show already subscribed message
-        form.style.display = 'none';
-        messageDiv.classList.remove('hidden');
-        messageDiv.classList.add('text-green-400');
-        messageDiv.textContent = '';
-        const icon = document.createElement('i');
-        icon.className = 'fa-solid fa-check mr-2';
-        messageDiv.appendChild(icon);
-        messageDiv.appendChild(document.createTextNode("You're already subscribed!"));
-        messageDiv.style.position = 'relative';
+        showSubscribedState();
         return; // Exit early, don't set up form handlers
     }
     
@@ -128,13 +126,8 @@
                 // Mark as subscribed in localStorage to prevent form reuse
                 localStorage.setItem('bluebeacon_subscribed', 'true');
                 
-                showMessage('success', 'Success! Redirecting...');
-                setButtonsSuccess(allButtons);
-                
-                // Redirect to confirmation page
-                setTimeout(() => {
-                    window.location.href = '/confirmed.html';
-                }, 1000);
+                // Show subscribed state (hides form, shows confirmation)
+                showSubscribedState();
                 return;
             } else {
                 // Use a generic message instead of server response to prevent XSS

@@ -87,7 +87,7 @@
         </div>
 
         <!-- Subscription Form -->
-        <div class="mt-8 sm:mt-10 w-full max-w-md px-2 opacity-0 animate-fade-in-up" style="animation-delay: 0.6s;">
+        <div id="formContainer" class="mt-8 sm:mt-10 w-full max-w-md px-2 opacity-0 animate-fade-in-up" style="animation-delay: 0.6s;">
             <form id="subscribeForm" class="relative group">
                 <!-- Honeypot field - hidden from real users, bots will fill it -->
                 <input type="text" name="website" id="website" style="position:absolute;left:-9999px;top:-9999px;" tabindex="-1" autocomplete="off" aria-hidden="true">
@@ -130,9 +130,17 @@
                     </button>
                 </div>
                 
-                <!-- Success/Error Message Container -->
+                <!-- Error Message Container -->
                 <div id="formMessage" class="absolute left-0 right-0 mt-3 text-sm hidden font-light tracking-wide text-center"></div>
             </form>
+            
+            <!-- Subscribed State (shown after successful subscription) -->
+            <div id="subscribedState" class="hidden text-center py-4">
+                <div class="inline-flex items-center gap-2 text-green-400">
+                    <i class="fa-solid fa-check"></i>
+                    <span class="font-light tracking-wide">You're subscribed! Check your email to confirm.</span>
+                </div>
+            </div>
         </div>
 
     </main>
