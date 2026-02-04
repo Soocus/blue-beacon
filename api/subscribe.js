@@ -4,8 +4,9 @@ const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 5; // 5 requests per minute per IP
 
 function getRateLimitKey(req) {
-    return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
-           req.headers['x-real-ip'] || 
+    // Prefer x-real-ip (Vercel's trusted header) over x-forwarded-for (can be spoofed)
+    return req.headers['x-real-ip'] || 
+           req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
            'unknown';
 }
 
@@ -102,12 +103,21 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Please provide a valid email address' });
     }
 
+    // Honeypot check - reject if the hidden field has a value (bot detected)
+    if (body?.website) {
+        // Silently reject but return success to not tip off bots
+        return res.status(200).json({ 
+            success: true, 
+            message: 'Subscribed successfully'
+        });
+    }
+
     // ConvertKit API settings
     const CONVERTKIT_API_KEY = process.env.CONVERTKIT_API_KEY;
-    const CONVERTKIT_FORM_ID = process.env.CONVERTKIT_FORM_ID || '9005443';
+    const CONVERTKIT_FORM_ID = process.env.CONVERTKIT_FORM_ID;
 
-    if (!CONVERTKIT_API_KEY) {
-        console.error('CONVERTKIT_API_KEY not configured');
+    if (!CONVERTKIT_API_KEY || !CONVERTKIT_FORM_ID) {
+        console.error('ConvertKit configuration missing');
         return res.status(500).json({ error: 'Service temporarily unavailable' });
     }
 
@@ -137,7 +147,7 @@ export default async function handler(req, res) {
             // Log the actual error for debugging, but don't expose it
             console.error('ConvertKit error:', data);
             return res.status(400).json({ 
-                error: 'Subscription failed. Please try again or use a different email address.'
+                error: 'Subscription failed. Please try again.'
             });
         }
     } catch (error) {

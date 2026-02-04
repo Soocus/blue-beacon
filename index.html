@@ -124,6 +124,9 @@
         <!-- Subscription Form -->
         <div class="mt-8 sm:mt-10 w-full max-w-md px-2 opacity-0 animate-fade-in-up" style="animation-delay: 0.6s;">
             <form id="subscribeForm" class="relative group">
+                <!-- Honeypot field - hidden from real users, bots will fill it -->
+                <input type="text" name="website" id="website" style="position:absolute;left:-9999px;top:-9999px;" tabindex="-1" autocomplete="off" aria-hidden="true">
+                
                 <!-- Desktop: inline layout -->
                 <div class="hidden sm:flex items-center border-b-2 border-white/30 transition-all duration-300 focus-within:border-white focus-within:bg-white/5 py-3">
                     <i class="fa-regular fa-envelope text-gray-400 ml-2"></i>
@@ -200,6 +203,7 @@
             
             // Get email from whichever input has a value
             const email = (desktopInput.value || mobileInput.value).trim();
+            const honeypot = document.getElementById('website').value;
             
             // Validate
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -225,7 +229,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ email }),
+                    body: JSON.stringify({ email, website: honeypot }),
                 });
                 
                 const data = await response.json();
