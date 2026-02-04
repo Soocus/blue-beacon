@@ -14,52 +14,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600&family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS (Play CDN - for production, consider building Tailwind locally) -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS (built) -->
+    <link rel="stylesheet" href="/assets/styles.css">
     
     <!-- Font Awesome (with SRI for security) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
-
-    <!-- Custom Config -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Montserrat', 'sans-serif'],
-                        headline: ['Anton', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            gold: '#C5A059', 
-                            dark: '#0a0a0a',
-                        }
-                    },
-                    animation: {
-                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
-                        'fade-in': 'fadeIn 1s ease-out forwards',
-                        'bounce-in': 'bounceIn 0.6s ease-out forwards',
-                    },
-                    keyframes: {
-                        fadeInUp: {
-                            '0%': { opacity: '0', transform: 'translateY(20px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        },
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
-                        },
-                        bounceIn: {
-                            '0%': { opacity: '0', transform: 'scale(0.8)' },
-                            '50%': { transform: 'scale(1.05)' },
-                            '100%': { opacity: '1', transform: 'scale(1)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
 
     <style>
         /* Mobile viewport fix */
