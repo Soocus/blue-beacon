@@ -36,9 +36,9 @@ function isValidEmail(email) {
 
 // Allowed origins for CORS
 const ALLOWED_ORIGINS = [
-    'https://bluebeacon.show',
-    'https://www.bluebeacon.show',
-    'https://blue-beacon.vercel.app',
+    'https://bluebeaconshow.com',
+    'https://www.bluebeaconshow.com',
+    'https://bluebeaconshow.vercel.app',
 ];
 
 // In development, also allow localhost
