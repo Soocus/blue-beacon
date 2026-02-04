@@ -1,39 +1,65 @@
-// Simple in-memory rate limiting (resets on cold start, but effective for bursts)
-const rateLimit = new Map();
-const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 5; // 5 requests per minute per IP
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 
-function getRateLimitKey(req) {
+// Persistent rate limiting with Upstash Redis (survives cold starts)
+let ratelimit = null;
+
+function getRatelimiter() {
+    if (ratelimit) return ratelimit;
+    
+    // Only initialize if env vars are present (graceful fallback)
+    if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+        const redis = new Redis({
+            url: process.env.UPSTASH_REDIS_REST_URL,
+            token: process.env.UPSTASH_REDIS_REST_TOKEN,
+        });
+        
+        ratelimit = new Ratelimit({
+            redis,
+            limiter: Ratelimit.slidingWindow(5, '1 m'), // 5 requests per minute
+            analytics: true,
+            prefix: 'bluebeacon:ratelimit',
+        });
+    }
+    
+    return ratelimit;
+}
+
+function getClientIP(req) {
     // Prefer x-real-ip (Vercel's trusted header) over x-forwarded-for (can be spoofed)
     return req.headers['x-real-ip'] || 
            req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
            'unknown';
 }
 
-function isRateLimited(key) {
-    const now = Date.now();
-    const windowStart = now - RATE_LIMIT_WINDOW_MS;
+// Helper to add random delay (prevents timing attacks on honeypot)
+function randomDelay(minMs = 100, maxMs = 500) {
+    const delay = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
+    return new Promise(resolve => setTimeout(resolve, delay));
+}
+
+// CSRF token validation using double-submit cookie pattern
+function validateCSRF(req) {
+    const cookieToken = req.cookies?.csrf_token;
+    const headerToken = req.headers['x-csrf-token'];
     
-    // Periodic cleanup of stale entries to prevent memory growth
-    if (rateLimit.size > 1000) {
-        for (const [k, timestamps] of rateLimit) {
-            if (timestamps.every(t => t < windowStart)) {
-                rateLimit.delete(k);
-            }
-        }
-    }
+    // Both must be present and match
+    if (!cookieToken || !headerToken) return false;
+    if (cookieToken !== headerToken) return false;
+    if (cookieToken.length < 32) return false; // Minimum token length
     
-    // Clean up old entries for this key
-    const requests = rateLimit.get(key) || [];
-    const recentRequests = requests.filter(timestamp => timestamp > windowStart);
-    
-    if (recentRequests.length >= RATE_LIMIT_MAX_REQUESTS) {
+    return true;
+}
+
+// Request body size limit (1KB max for this endpoint)
+const MAX_BODY_SIZE = 1024;
+
+function isBodyTooLarge(body) {
+    try {
+        return JSON.stringify(body).length > MAX_BODY_SIZE;
+    } catch {
         return true;
     }
-    
-    recentRequests.push(now);
-    rateLimit.set(key, recentRequests);
-    return false;
 }
 
 // Email validation regex (RFC 5322 simplified)
@@ -61,9 +87,10 @@ export default async function handler(req, res) {
     const origin = req.headers.origin;
     if (origin && ALLOWED_ORIGINS.includes(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
     }
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-CSRF-Token');
     res.setHeader('Access-Control-Max-Age', '86400'); // Cache preflight for 24 hours
 
     // Handle preflight
@@ -76,10 +103,29 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    // Rate limiting
-    const clientKey = getRateLimitKey(req);
-    if (isRateLimited(clientKey)) {
-        return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+    // CSRF validation (skip in development for easier testing)
+    if (process.env.NODE_ENV === 'production') {
+        if (!validateCSRF(req)) {
+            return res.status(403).json({ error: 'Invalid request. Please refresh the page and try again.' });
+        }
+    }
+
+    // Rate limiting with Upstash Redis (persistent across cold starts)
+    const clientIP = getClientIP(req);
+    const limiter = getRatelimiter();
+    
+    if (limiter) {
+        try {
+            const { success, remaining } = await limiter.limit(clientIP);
+            res.setHeader('X-RateLimit-Remaining', remaining.toString());
+            
+            if (!success) {
+                return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+            }
+        } catch (error) {
+            // Log but don't block if rate limiter fails
+            console.error('Rate limiter error:', error);
+        }
     }
 
     // Parse body - handle both string and object
@@ -90,6 +136,11 @@ export default async function handler(req, res) {
         } catch (e) {
             return res.status(400).json({ error: 'Invalid request format' });
         }
+    }
+
+    // Check body size limit
+    if (isBodyTooLarge(body)) {
+        return res.status(413).json({ error: 'Request too large' });
     }
 
     const email = body?.email?.trim()?.toLowerCase();
@@ -105,6 +156,8 @@ export default async function handler(req, res) {
 
     // Honeypot check - reject if the hidden field has a value (bot detected)
     if (body?.website) {
+        // Add random delay to prevent timing attacks that could detect honeypot rejection
+        await randomDelay(200, 600);
         // Silently reject but return success to not tip off bots
         return res.status(200).json({ 
             success: true, 

@@ -8,6 +8,28 @@
     const mobileInput = document.getElementById('email-mobile');
     const allButtons = form.querySelectorAll('.subscribe-btn');
     
+    // CSRF token generation and management (double-submit cookie pattern)
+    function generateCSRFToken() {
+        const array = new Uint8Array(32);
+        crypto.getRandomValues(array);
+        return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+    }
+
+    function getCSRFToken() {
+        // Check if token exists in cookie
+        const match = document.cookie.match(/csrf_token=([^;]+)/);
+        if (match) return match[1];
+        
+        // Generate new token and set cookie
+        const token = generateCSRFToken();
+        // Set cookie with SameSite=Strict for additional security
+        document.cookie = `csrf_token=${token}; path=/; SameSite=Strict; Secure`;
+        return token;
+    }
+
+    // Initialize CSRF token on page load
+    const csrfToken = getCSRFToken();
+
     // Sync inputs between mobile and desktop
     mobileInput.addEventListener('input', () => desktopInput.value = mobileInput.value);
     desktopInput.addEventListener('input', () => mobileInput.value = desktopInput.value);
@@ -79,7 +101,9 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken,
                 },
+                credentials: 'same-origin', // Include cookies for CSRF
                 body: JSON.stringify({ email, website: honeypot }),
             });
             
