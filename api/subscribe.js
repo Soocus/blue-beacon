@@ -13,7 +13,16 @@ function isRateLimited(key) {
     const now = Date.now();
     const windowStart = now - RATE_LIMIT_WINDOW_MS;
     
-    // Clean up old entries
+    // Periodic cleanup of stale entries to prevent memory growth
+    if (rateLimit.size > 1000) {
+        for (const [k, timestamps] of rateLimit) {
+            if (timestamps.every(t => t < windowStart)) {
+                rateLimit.delete(k);
+            }
+        }
+    }
+    
+    // Clean up old entries for this key
     const requests = rateLimit.get(key) || [];
     const recentRequests = requests.filter(timestamp => timestamp > windowStart);
     
